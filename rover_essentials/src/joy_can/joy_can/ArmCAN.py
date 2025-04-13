@@ -7,6 +7,7 @@ import rclpy
 from rclpy.node import Node
 from msg_interfaces.msg import ArmEndMotion
 from msg_interfaces.msg import EncoderArm
+from msg_interfaces.msg import CurrentArm
 #import struct
 
 
@@ -59,7 +60,10 @@ pos1=[0]*NUM_NODES_CH1 #absolute position
 PWM1=[0]*NUM_NODES_CH1 #set 8 bit PWM value from 0 - 255
 DIR1=[0]*NUM_NODES_CH1
 
-
+# Current sensor
+current_sensor_flag = [False] * NUM_NODES_CH1
+current_sensor_data = [[0, 0] for _ in range(NUM_NODES_CH1)]
+current_data = [0.0] * NUM_NODES_CH1
 
 #PWM[0]=20 #for testing, comment out later 
 #DIR[0]=1
@@ -108,6 +112,7 @@ class CAN_Publisher(Node):
         
 
         self.publisher_encoder = self.create_publisher(EncoderArm,'encoder_arm',10)
+        self.publisher_current = self.create_publisher(CurrentArm,'current_arm',10)
 
         self.timer = self.create_timer(timer_period, self.timer_callback)
     
@@ -184,8 +189,9 @@ class CAN_Publisher(Node):
             #sysCANCheckFlag=0
         if self.pollingFlag1:
             #print('poll')
-            enc_msg=poll(msg,can1)
+            enc_msg, current_msg = poll(msg,can1)
             self.publisher_encoder.publish(enc_msg)
+            self.publisher_current.publish(current_msg)
             #if i<2000:
             #    #poll(msg,can0)
             #    i+=1
@@ -220,6 +226,14 @@ def pending1(msg_rx:can.Message):
                 CANCheck1[i]=1
                 for j in range(6):
                     encoderIn1[i][j]=msg_rx.data[j] #copy the bytes received
+
+    # Current sensor
+    if msg_rx.dlc == 2:
+        for i in range(NUM_NODES_CH1):
+            if msg_rx.arbitration_id == SLAVE_IDS1[i]:
+                current_sensor_flag[i] = True
+                for j in range(len(current_sensor_data[i])):
+                    current_sensor_data[i][j]=msg_rx.data[j]
     #use the above logic for bytes reconstruction
 
 def resetEnc(msg_tx:can.Message,bus1):
@@ -353,6 +367,11 @@ def poll(msg_tx:can.Message,bus1):
             pos1[i] = s_pos
             diff1[i] = s_diff
 
+        if current_sensor_flag[i]:
+            current_sensor_flag[i] = False
+
+            current_data[i] = current_sensor_data[i][0] + current_sensor_data[i][1] / 100
+
 
         (f"MSG, channel 1, {i},{pos1[i]},{diff1[i]}");
 
@@ -366,7 +385,15 @@ def poll(msg_tx:can.Message,bus1):
     enc_msg.arm_node3 = [pos1[3],diff1[3]]
     enc_msg.arm_node4 = [pos1[4],diff1[4]]
     enc_msg.arm_node5 = [pos1[5],diff1[5]]
-    return enc_msg
+    
+    current_msg = CurrentArm()
+    current_msg.current_node0 = current_data[0]
+    current_msg.current_node1 = current_data[1]
+    current_msg.current_node2 = current_data[2]
+    current_msg.current_node3 = current_data[3]
+    current_msg.current_node4 = current_data[4]
+    current_msg.current_node5 = current_data[5]
+    return enc_msg, current_msg
     
 #TODO run the CAN.sh script before this
 

@@ -7,6 +7,7 @@ import rclpy
 from rclpy.node import Node
 from msg_interfaces.msg import Drive
 from msg_interfaces.msg import EncoderDrive
+from msg_interfaces.msg import CurrentDrive
 
 
 #TODO modify the OS commands to set up CAN0 node only if it is not running 
@@ -62,6 +63,11 @@ angPos0=[0]*NUM_NODES_CH0 #angular position
 PWM0=[0]*NUM_NODES_CH0 #set 8 bit PWM value from 0 - 255
 DIR0=[0]*NUM_NODES_CH0
 
+# Current sensor
+current_sensor_flag = [False] * NUM_NODES_CH0
+current_sensor_data = [[0, 0] for _ in range(NUM_NODES_CH0)]
+current_data = [0.0] * NUM_NODES_CH0
+
 
 #PWM[0]=20 #for testing, comment out later 
 #DIR[0]=1
@@ -86,6 +92,7 @@ class CAN_Publisher(Node):
 
         self.subscription_drive=self.create_subscription(Drive,'/drive_commands',self.CAN_callback0,10)
         self.publisher_encoder = self.create_publisher(EncoderDrive,'encoder_drive',10)
+        self.publisher_current = self.create_publisher(CurrentDrive,'current_drive',10)
 
         self.timer = self.create_timer(timer_period, self.timer_callback)
     
@@ -124,8 +131,9 @@ class CAN_Publisher(Node):
             time.sleep(0.2) #small delay before moving to next command
             #sysCANCheckFlag=0
         if self.pollingFlag0:
-            enc_msg=poll(msg,can0)
+            enc_msg, current_msg = poll(msg,can0)
             self.publisher_encoder.publish(enc_msg)
+            self.publisher_current.publish(current_msg)
             #self.get_logger().info(list(enc_msg.drive_node0))
             #self.get_logger().info(list(enc_msg.drive_node1))
             #self.get_logger().info(list(enc_msg.drive_node2))
@@ -166,6 +174,14 @@ def pending0(msg_rx:can.Message):
                 CANCheck0[i]=1
                 for j in range(8):
                     encoderIn0[i][j]=msg_rx.data[j] #copy the bytes received
+
+    # Current sensor
+    if msg_rx.dlc == 2:
+        for i in range(NUM_NODES_CH0):
+            if msg_rx.arbitration_id == SLAVE_IDS0[i]:
+                current_sensor_flag[i] = True
+                for j in range(len(current_sensor_data[i])):
+                    current_sensor_data[i][j] = msg_rx.data[j]
     #use the above logic for bytes reconstruction
 
 def resetEnc(msg_tx:can.Message,bus0):
@@ -252,6 +268,12 @@ def poll(msg_tx:can.Message,bus0):
             angPos0[i] = (encoderIn0[i][4]<<8) | (encoderIn0[i][5]);
             diff0[i] = (encoderIn0[i][6]<<8) | (encoderIn0[i][7]);
 
+
+        if current_sensor_flag[i]:
+            current_sensor_flag[i] = False
+
+            current_data[i] = current_sensor_data[i][0] + current_sensor_data[i][1] / 100
+
         print(f"MSG, channel 0, {i},{pos0[i]},{angPos0[i]},{diff0[i]}");
 
         delay_us(DELAY); #wait 1.25 ms =(5/4) ms before polling the next node (-50 for the previous delay of 20 us)
@@ -264,6 +286,14 @@ def poll(msg_tx:can.Message,bus0):
     enc_msg.drive_node3 = [3,pos0[3],angPos0[3],diff0[3]]
     enc_msg.drive_node4 = [4,pos0[4],angPos0[4],diff0[4]]
     enc_msg.drive_node5 = [5,pos0[5],angPos0[5],diff0[5]]
+
+    current_msg = CurrentDrive()
+    current_msg.current_node0 = current_data[0]
+    current_msg.current_node1 = current_data[1]
+    current_msg.current_node2 = current_data[2]
+    current_msg.current_node3 = current_data[3]
+    current_msg.current_node4 = current_data[4]
+    current_msg.current_node5 = current_data[5]
     return enc_msg
     
 #TODO run the CAN.sh script before this

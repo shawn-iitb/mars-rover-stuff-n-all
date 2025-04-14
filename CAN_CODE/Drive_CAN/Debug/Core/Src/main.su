@@ -1,0 +1,12 @@
+../Core/Src/main.c:132:7:rounding	32	static
+../Core/Src/main.c:139:6:HAL_ADC_ConvCpltCallback	16	static
+../Core/Src/main.c:146:7:median	120	static
+../Core/Src/main.c:170:5:main	72	static,ignoring_inline_asm
+../Core/Src/main.c:303:6:SystemClock_Config	88	static
+../Core/Src/main.c:350:13:MX_ADC1_Init	24	static
+../Core/Src/main.c:397:13:MX_CAN_Init	48	static
+../Core/Src/main.c:448:13:MX_TIM2_Init	64	static
+../Core/Src/main.c:507:13:MX_TIM4_Init	56	static
+../Core/Src/main.c:556:13:MX_GPIO_Init	40	static
+../Core/Src/main.c:603:6:HAL_CAN_RxFifo1MsgPendingCallback	40	static
+../Core/Src/main.c:754:6:Error_Handler	4	static,ignoring_inline_asm

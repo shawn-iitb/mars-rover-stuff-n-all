@@ -134,6 +134,9 @@ class CAN_Publisher(Node):
             enc_msg, current_msg = poll(msg,can0)
             self.publisher_encoder.publish(enc_msg)
             self.publisher_current.publish(current_msg)
+
+            printable = ", ".join([f"Drive current node {i}: {eval(f'current_msg.current_node{i}')}" for i in range(6)])
+            self.get_logger().info(printable)
             #self.get_logger().info(list(enc_msg.drive_node0))
             #self.get_logger().info(list(enc_msg.drive_node1))
             #self.get_logger().info(list(enc_msg.drive_node2))

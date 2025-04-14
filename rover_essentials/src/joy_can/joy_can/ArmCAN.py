@@ -192,6 +192,9 @@ class CAN_Publisher(Node):
             enc_msg, current_msg = poll(msg,can1)
             self.publisher_encoder.publish(enc_msg)
             self.publisher_current.publish(current_msg)
+
+            printable = ", ".join([f"Arm current node {i}: {eval(f'current_msg.current_node{i}')}" for i in range(6)])
+            self.get_logger().info(printable)
             #if i<2000:
             #    #poll(msg,can0)
             #    i+=1

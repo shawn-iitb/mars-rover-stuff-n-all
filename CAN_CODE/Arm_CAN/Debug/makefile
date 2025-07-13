@@ -1,6 +1,6 @@
 ################################################################################
 # Automatically-generated file. Do not edit!
-# Toolchain: GNU Tools for STM32 (12.3.rel1)
+# Toolchain: GNU Tools for STM32 (13.3.rel1)
 ################################################################################
 
 -include ../makefile.init
@@ -66,8 +66,8 @@ all: main-build
 main-build: Arm_CAN.elf secondary-outputs
 
 # Tool invocations
-Arm_CAN.elf Arm_CAN.map: $(OBJS) $(USER_OBJS) C:\Users\shrid\STM32CubeIDE\workspace_1.17.0\Arm_CAN\STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Arm_CAN.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\shrid\STM32CubeIDE\workspace_1.17.0\Arm_CAN\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Arm_CAN.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Arm_CAN.elf Arm_CAN.map: $(OBJS) $(USER_OBJS) /home/harshit/STM32CubeIDE/mrt_motor_code/mars-rover-stuff-n-all/CAN_CODE/Arm_CAN/STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "Arm_CAN.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"/home/harshit/STM32CubeIDE/mrt_motor_code/mars-rover-stuff-n-all/CAN_CODE/Arm_CAN/STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Arm_CAN.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
